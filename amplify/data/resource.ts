@@ -19,7 +19,8 @@ const schema = a.schema({
       area: a.string().required(),
       description: a.string().required(),
     })
-    .authorization((allow) => [allow.publicApiKey()]),
+    .authorization((allow) => [allow.publicApiKey().to(["create","read"]),
+                              ]),
 });
 
 
