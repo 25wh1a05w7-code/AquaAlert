@@ -24,17 +24,16 @@ const shortageReports = reports.filter(
 const leakageReports = reports.filter(
   (report) => report.type === "Water leakage"
 ).length;
-
-const qualityReports = reports.filter(
-  (report) => report.type === "Water quality concern"
+  const qualityReports = reports.filter(
+  (report) => report.type === "Suspected water contamination"
 ).length;
 
 const floodingReports = reports.filter(
-  (report) => report.type === "Flooding or waterlogging"
+  (report) => report.type === "Flooding"
 ).length;
 
 const otherReports = reports.filter(
-  (report) => report.type === "Other"
+  (report) => report.type === "Other water problem"
 ).length;
   useEffect(() => {
   const subscription = client.models.WaterReport.observeQuery().subscribe({
