@@ -12,7 +12,16 @@ const schema = a.schema({
       content: a.string(),
     })
     .authorization((allow) => [allow.publicApiKey()]),
+
+  WaterReport: a
+    .model({
+      problemType: a.string().required(),
+      area: a.string().required(),
+      description: a.string().required(),
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
 });
+
 
 export type Schema = ClientSchema<typeof schema>;
 
