@@ -1,18 +1,41 @@
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
+import { generateClient } from "aws-amplify/data";
+import type { Schema } from "../amplify/data/resource";
+const client = generateClient<Schema>();
 type Report = {
-  id: number;
+  id: string;
   type: string;
   location: string;
   details: string;
 };
-
 function App() {
-  const [reports, setReports] = useState<Report[]>([]);
+const [reports, setReports] = useState<Report[]>([]);
+const [loading, setLoading] = useState(true);
   const [type, setType] = useState("Water shortage");
   const [location, setLocation] = useState("");
   const [details, setDetails] = useState("");
   const [message, setMessage] = useState("");
+  useEffect(() => {
+  const subscription = client.models.WaterReport.observeQuery().subscribe({
+    next: ({ items }) => {
+      setReports(
+        items.map((item) => ({
+          id: item.id,
+          type: item.problemType,
+          location: item.area,
+          details: item.description,
+        }))
+      );
+      setLoading(false);
+    },
+    error: (error) => {
+      console.error("Error loading reports:", error);
+      setLoading(false);
+    },
+  });
+
+  return () => subscription.unsubscribe();
+}, []);
 
   const styles: Record<string, React.CSSProperties> = {
     page: {
@@ -52,23 +75,29 @@ function App() {
     },
   };
 
-  function submitReport(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+async function submitReport(event: React.FormEvent<HTMLFormElement>) {
+  event.preventDefault();
+  setMessage("Submitting report...");
 
-    setReports((previous) => [
-      ...previous,
-      {
-        id: Date.now(),
-        type,
-        location: location.trim(),
-        details: details.trim(),
-      },
-    ]);
+  try {
+    const { errors } = await client.models.WaterReport.create({
+      problemType: type,
+      area: location.trim(),
+      description: details.trim(),
+    });
+
+    if (errors?.length) {
+      throw new Error("Could not save the report.");
+    }
 
     setLocation("");
     setDetails("");
-    setMessage("Your report has been added to this demo!");
+    setMessage("Your report was saved successfully!");
+  } catch (error) {
+    console.error(error);
+    setMessage("Could not save the report. Please try again.");
   }
+}
 
   return (
     <main style={styles.page}>
@@ -155,33 +184,29 @@ function App() {
 
       <section style={styles.card}>
         <h2>📋 Community Reports</h2>
-        <p>Reports submitted during this session: {reports.length}</p>
-
-        {reports.length === 0 ? (
-          <p>No reports submitted yet. Be the first to contribute!</p>
-        ) : (
-          reports.map((report) => (
-            <article
-              key={report.id}
-              style={{
-                border: "1px solid #d8e9e7",
-                borderRadius: "10px",
-                padding: "14px",
-                marginTop: "12px",
-              }}
-            >
-              <h3>{report.type}</h3>
-              <p>📍 {report.location}</p>
-              <p>{report.details}</p>
-              <small>Community-submitted demo report</small>
-            </article>
-          ))
-        )}
-
-        <p style={{ color: "#64748b", fontSize: "13px" }}>
-          These reports are temporary and will disappear when the
-          page is refreshed. Persistent storage will be added later.
-        </p>
+<p>Saved community reports: {reports.length}</p>
+        {loading ? (
+  <p>Loading reports...</p>
+) : reports.length === 0 ? (
+  <p>No reports submitted yet. Be the first to contribute!</p>
+) : (
+  reports.map((report) => (
+    <article
+      key={report.id}
+      style={{
+        border: "1px solid #d8e9e7",
+        borderRadius: "10px",
+        padding: "14px",
+        marginTop: "12px",
+      }}
+    >
+      <h3>{report.type}</h3>
+      <p>📍 {report.location}</p>
+      <p>{report.details}</p>
+      <small>Community-submitted report</small>
+    </article>
+  ))
+)}
       </section>
 
       <section style={styles.card}>
