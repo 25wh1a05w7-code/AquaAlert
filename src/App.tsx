@@ -15,6 +15,27 @@ const [loading, setLoading] = useState(true);
   const [location, setLocation] = useState("");
   const [details, setDetails] = useState("");
   const [message, setMessage] = useState("");
+  const totalReports = reports.length;
+
+const shortageReports = reports.filter(
+  (report) => report.type === "Water shortage"
+).length;
+
+const leakageReports = reports.filter(
+  (report) => report.type === "Water leakage"
+).length;
+
+const qualityReports = reports.filter(
+  (report) => report.type === "Water quality concern"
+).length;
+
+const floodingReports = reports.filter(
+  (report) => report.type === "Flooding or waterlogging"
+).length;
+
+const otherReports = reports.filter(
+  (report) => report.type === "Other"
+).length;
   useEffect(() => {
   const subscription = client.models.WaterReport.observeQuery().subscribe({
     next: ({ items }) => {
@@ -101,6 +122,44 @@ async function submitReport(event: React.FormEvent<HTMLFormElement>) {
 
   return (
     <main style={styles.page}>
+      <section style={styles.card}>
+  <h2>📊 Water Issue Analytics</h2>
+  <p>Live summary of community reports</p>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+      gap: "12px",
+    }}
+  >
+    {[
+      { label: "Total Reports", count: totalReports, icon: "📋" },
+      { label: "Water Shortages", count: shortageReports, icon: "🚱" },
+      { label: "Water Leaks", count: leakageReports, icon: "🔧" },
+      { label: "Water Quality", count: qualityReports, icon: "💧" },
+      { label: "Flooding", count: floodingReports, icon: "🌧️" },
+      { label: "Other Issues", count: otherReports, icon: "📍" },
+    ].map((item) => (
+      <div
+        key={item.label}
+        style={{
+          background: "#f0f9ff",
+          border: "1px solid #dbeafe",
+          borderRadius: "12px",
+          padding: "16px",
+          textAlign: "center",
+        }}
+      >
+        <div style={{ fontSize: "24px" }}>{item.icon}</div>
+        <h3 style={{ fontSize: "28px", margin: "8px 0" }}>
+          {loading ? "—" : item.count}
+        </h3>
+        <p style={{ fontSize: "13px", margin: 0 }}>{item.label}</p>
+      </div>
+    ))}
+  </div>
+</section>
       <header
         style={{
           ...styles.card,
